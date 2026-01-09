@@ -1,0 +1,19 @@
+{
+	"name": "unocss-svelte",
+	"type": "module",
+	"private": true,
+	"devDependencies": {
+		"@biomejs/biome": "^2.3.11",
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"workspaces": [
+		"pkgs/*",
+		"examples/*"
+	],
+	"scripts": {
+		"format": "bunx biome format --write"
+	}
+}
