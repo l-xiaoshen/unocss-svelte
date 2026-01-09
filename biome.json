@@ -16,5 +16,10 @@
 	},
 	"assist": {
 		"enabled": false
+	},
+	"vcs": {
+		"enabled": true,
+		"useIgnoreFile": true,
+		"clientKind": "git"
 	}
 }
