@@ -39,9 +39,7 @@ export async function transformSvelte(code: string, uno: UnoGenerator, options: 
 		return null
 	}
 
-	const cssString = options.generateLayers
-		? result.layers.map((l) => `@layer ${l} \n{\n${result.getLayer(l)}\n}`).join("\n")
-		: result.css
+	const cssString = result.css
 
 	const { code: cssCode } = transform({
 		filename: "style.css",

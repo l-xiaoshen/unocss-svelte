@@ -1,16 +1,14 @@
 import { createRecoveryConfigLoader } from "@unocss/config"
-import { createGenerator, UnoGenerator, type UnocssPluginContext } from "@unocss/core"
+import { createGenerator, UnoGenerator } from "@unocss/core"
 import type { Plugin } from "vite"
 import { transformSvelte } from "./transform/transform"
 
 const unoPreflightVirtualModuleId = "virtual:uno-preflight.css"
 const resolvedUnoPreflightVirtualModuleId = "\0" + unoPreflightVirtualModuleId
 
-export type UnoCSSSvelteScopedOptions = {
-	generateLayers?: boolean
-}
+export type UnoCSSSvelteScopedOptions = {}
 
-export function UnoCSSSvelteScoped(options: UnoCSSSvelteScopedOptions = { generateLayers: true }): Plugin {
+export function UnoCSSSvelteScoped(unocssOptions: UnoCSSSvelteScopedOptions = {}): Plugin {
 	const loadConfig = createRecoveryConfigLoader()
 	let uno: UnoGenerator
 	const _uno = createGenerator().then((r) => {
@@ -40,7 +38,7 @@ export function UnoCSSSvelteScoped(options: UnoCSSSvelteScopedOptions = { genera
 			},
 			async handler(code, id, options) {
 				await ready
-				const result = await transformSvelte(code, uno)
+				const result = await transformSvelte(code, uno, unocssOptions)
 
 				if (!result) {
 					return
