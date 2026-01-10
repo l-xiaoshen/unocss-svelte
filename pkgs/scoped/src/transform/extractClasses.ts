@@ -9,10 +9,9 @@ export function extractClasses(ast: AST.Root): FoundClasses[] {
 		foundClasses.push(...extractClassesInMarkup(node))
 	}
 
-	// TODO
-	// if (ast.css) {
-	// 	foundClasses.push(...extractClassesInStyle(ast.css))
-	// }
+	if (ast.css) {
+		foundClasses.push(...extractClassesInStyle(ast.css))
+	}
 
 	return foundClasses
 }

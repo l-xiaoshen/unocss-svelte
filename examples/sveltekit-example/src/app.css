@@ -1,1 +1,6 @@
 @import '@unocss/reset/tailwind-v4.css' layer(base);
+
+
+html {
+    @apply bg-green-500;
+}

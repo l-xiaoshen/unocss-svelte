@@ -1,13 +1,10 @@
 import { createGenerator } from "@unocss/core"
-import { describe, test, expect } from "bun:test"
 import { presetWind4 } from "@unocss/preset-wind4"
+import { test } from "bun:test"
 
 test("unocss", async () => {
 	const uno = await createGenerator({
-		presets: [
-			// @ts-expect-error
-			presetWind4(),
-		],
+		presets: [presetWind4()],
 	})
 
 	const result = await uno.generate("", {
@@ -18,17 +15,21 @@ test("unocss", async () => {
 
 	const firstCSS = result.css
 
+	await uno.setConfig(uno.userConfig, uno.defaults)
+
 	await uno.generate("bg-red-500", {
 		preflights: false,
 		safelist: false,
 		extendedInfo: true,
 	})
 
+	await uno.setConfig(uno.userConfig, uno.defaults)
 	await uno.generate("bg-red-500 bg-blue-500", {
 		preflights: false,
 		safelist: false,
 		extendedInfo: true,
 	})
+	await uno.setConfig(uno.userConfig, uno.defaults)
 
 	const result2 = await uno.generate("", {
 		preflights: true,

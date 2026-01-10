@@ -1,7 +1,9 @@
 import { createRecoveryConfigLoader } from "@unocss/config"
-import { createGenerator, UnoGenerator } from "@unocss/core"
+import { createGenerator, UnoGenerator, type UnocssPluginContext } from "@unocss/core"
 import type { Plugin } from "vite"
 import { transformSvelte } from "./transform/transform"
+import transformerDirectives from "@unocss/transformer-directives"
+import MagicString from "magic-string"
 
 const unoPreflightVirtualModuleId = "virtual:uno-preflight.css"
 const resolvedUnoPreflightVirtualModuleId = "\0" + unoPreflightVirtualModuleId
@@ -29,24 +31,79 @@ export function UnoCSSSvelteScoped(unocssOptions: UnoCSSSvelteScopedOptions = {}
 		return { config, sources }
 	}
 
+	const unoCtx = {
+		ready: ready,
+		uno: uno!,
+	} as UnocssPluginContext
+
+	let isSvelteKit = false
+
 	const plugin: Plugin = {
 		name: "vite-plugin-svelte-unocss-svelte-scoped",
+		configResolved(config) {
+			isSvelteKit = config.plugins.some((p) => p.name?.includes("vite-plugin-sveltekit"))
+		},
 		transform: {
 			filter: {
-				id: /\.svelte$/,
+				id: {
+					include: [/\.svelte$/, /\.css$/],
+				},
 			},
 			async handler(code, id, options) {
-				await ready
-
-				const result = await transformSvelte(code, uno, unocssOptions)
-
-				if (!result) {
+				const lastPart = id.split("/").pop()
+				if (!lastPart) {
 					return
 				}
 
-				return {
-					code: result.toString(),
-					map: result.generateMap(),
+				const filename = new URL(lastPart, "file://").pathname
+
+				await ready
+				const uno = await _uno
+				unoCtx.uno = uno
+
+				await uno.setConfig(uno.userConfig, uno.defaults)
+
+				if (id.endsWith(".svelte")) {
+					const result = await transformSvelte(code, uno, unoCtx, unocssOptions)
+
+					if (!result) {
+						return
+					}
+
+					return {
+						code: result.toString(),
+						map: result.generateMap(),
+					}
+				}
+
+				if (!isSvelteKit) {
+					return
+				}
+
+				if (filename.endsWith(".css")) {
+					const transformer = transformerDirectives()
+
+					const string = new MagicString(code)
+
+					await transformer.transform(string, id, unoCtx)
+
+					if (!string.hasChanged()) {
+						return
+					}
+
+					const { css: preflightCSS } = await uno.generate("", {
+						preflights: true,
+						safelist: true,
+						extendedInfo: false,
+					})
+					if (preflightCSS && preflightCSS.trim() !== "") {
+						string.append(preflightCSS)
+					}
+
+					return {
+						code: string.toString(),
+						map: string.generateMap(),
+					}
 				}
 			},
 			order: "pre",
