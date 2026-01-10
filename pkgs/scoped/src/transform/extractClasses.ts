@@ -8,6 +8,41 @@ export function extractClasses(ast: AST.Root): FoundClasses[] {
 	for (const node of ast.fragment.nodes) {
 		foundClasses.push(...extractClassesInMarkup(node))
 	}
+
+	// TODO
+	// if (ast.css) {
+	// 	foundClasses.push(...extractClassesInStyle(ast.css))
+	// }
+
+	return foundClasses
+}
+
+export function extractClassesInStyle(ast: AST.CSS.StyleSheet): FoundClasses[] {
+	const foundClasses: FoundClasses[] = []
+	for (const node of ast.children) {
+		foundClasses.push(...extractClassesInRule(node))
+	}
+	return foundClasses
+}
+
+function extractClassesInRule(node: AST.CSS.Node): FoundClasses[] {
+	const foundClasses: FoundClasses[] = []
+
+	walk(node, {} as WalkState, {
+		Atrule(node) {
+			if (node.name !== "apply") {
+				return
+			}
+
+			foundClasses.push({
+				start: node.start,
+				end: node.end,
+				classes: node.prelude,
+				type: "style_at_rule",
+			})
+		},
+	})
+
 	return foundClasses
 }
 
@@ -33,6 +68,7 @@ export function extractClassesInMarkup(ast: FragmentChildType): FoundClasses[] {
 							start: value.start,
 							end: value.end,
 							classes: value.data,
+							type: "literal",
 						})
 					} else if (value.type === "ExpressionTag") {
 						foundClasses.push(...extractStringConstant(value))
@@ -62,6 +98,7 @@ export function extractClassesInMarkup(ast: FragmentChildType): FoundClasses[] {
 				start: name_loc.start.character,
 				end: name_loc.end.character,
 				classes: node.name,
+				type: "class_directive",
 			})
 		},
 	})

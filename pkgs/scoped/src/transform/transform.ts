@@ -1,9 +1,10 @@
 import type { UnoGenerator } from "@unocss/core"
 import MagicString from "magic-string"
-import { parse } from "svelte/compiler"
+import { parse, type AST, type PreprocessorGroup } from "svelte/compiler"
 import { extractClasses } from "./extractClasses"
 import { transform, type Selector, type SelectorComponent } from "lightningcss"
 import type { UnoCSSSvelteScopedOptions } from ".."
+import type { FoundClasses } from "./types"
 
 // from @unocss/transformer-compile-class
 export function hash(str: string) {
@@ -26,11 +27,55 @@ export async function transformSvelte(code: string, uno: UnoGenerator, options: 
 		return null
 	}
 
-	const allClasses = classes.map((c) => c.classes).join(" ")
-	const result = await uno.generate(allClasses, {
-		preflights: false,
+	const appendCSS = await transformSvelteMarkup(uno, classes)
+
+	const string = new MagicString(code)
+
+	const atRules = classes.filter((c): c is FoundClasses & { type: "style_at_rule" } => c.type === "style_at_rule")
+	for (const atRule of atRules) {
+		console.log(atRule.classes)
+		await transformSvelteAtRule(uno, atRule, string)
+	}
+
+	const { css: preflightCSS } = await uno.generate("", {
+		preflights: true,
 		minify: false,
 		safelist: true,
+	})
+
+	if (ast.css) {
+		if (preflightCSS && preflightCSS.trim() !== "") {
+			string.appendLeft(ast.css.content.start, `\n:global\n{\n${preflightCSS}\n}\n`)
+		}
+
+		if (appendCSS) {
+			string.appendRight(ast.css.content.end, "\n" + appendCSS.toString())
+		}
+	} else {
+		let newCSS = ""
+		if (preflightCSS && preflightCSS.trim() !== "") {
+			newCSS += `:global\n{\n${preflightCSS}\n}\n`
+		}
+
+		if (appendCSS) {
+			newCSS += appendCSS.toString()
+		}
+
+		string.append(`\n\n<style>\n${newCSS}\n</style>`)
+	}
+
+	return string
+}
+
+async function transformSvelteMarkup(uno: UnoGenerator, classes: FoundClasses[]) {
+	const allClasses = classes
+		.filter((c) => c.type !== "style_at_rule")
+		.map((c) => c.classes)
+		.join(" ")
+	const result = await uno.generate(allClasses, {
+		preflights: false,
+		minify: true,
+		safelist: false,
 	})
 
 	result.layers = result.layers.filter((l) => result.getLayer(l)?.trim() !== "")
@@ -79,15 +124,15 @@ export async function transformSvelte(code: string, uno: UnoGenerator, options: 
 		},
 	})
 
-	const string = new MagicString(code)
+	return cssCode
+}
 
-	if (ast.css) {
-		string.appendRight(ast.css.content.end, `\n${cssCode.toString()}\n`)
-	} else {
-		string.append(`<style>\n${cssCode.toString()}\n</style>`)
-	}
-
-	return string
+async function transformSvelteAtRule(
+	unocss: UnoGenerator,
+	atRule: FoundClasses & { type: "style_at_rule" },
+	string: MagicString,
+) {
+	return null //TODO: Implement
 }
 
 function isClassSelector(selector: SelectorComponent): selector is SelectorComponent & { type: "class" } {

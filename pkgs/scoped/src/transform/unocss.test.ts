@@ -16,9 +16,26 @@ test("unocss", async () => {
 		extendedInfo: true,
 	})
 
-	console.log(result)
+	const firstCSS = result.css
 
-	for (const layer of result.layers) {
-		console.log(result.getLayer(layer))
-	}
+	await uno.generate("bg-red-500", {
+		preflights: false,
+		safelist: false,
+		extendedInfo: true,
+	})
+
+	await uno.generate("bg-red-500 bg-blue-500", {
+		preflights: false,
+		safelist: false,
+		extendedInfo: true,
+	})
+
+	const result2 = await uno.generate("", {
+		preflights: true,
+		safelist: false,
+		extendedInfo: true,
+	})
+
+	console.log(firstCSS === result2.css)
+	console.log(firstCSS.length, result2.css.length)
 })

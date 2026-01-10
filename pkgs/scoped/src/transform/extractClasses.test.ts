@@ -1,14 +1,14 @@
 /// <reference path="./declarations.d.ts" />
 
+import { describe, expect, test } from "bun:test"
 import { parse } from "svelte/compiler"
-import { describe, test, expect } from "bun:test"
 import { extractClasses } from "./extractClasses"
 
 // Test fixtures
-import StaticClassTest from "./test/StaticClass.test.svelte?raw"
 import AttributeClassTest from "./test/AttributeClass.test.svelte?raw"
-import ClsxClassTest from "./test/ClsxClass.test.svelte?raw"
 import ClassDirectiveTest from "./test/ClassDirective.test.svelte?raw"
+import ClsxClassTest from "./test/ClsxClass.test.svelte?raw"
+import StaticClassTest from "./test/StaticClass.test.svelte?raw"
 
 function getClasses(source: string): string[] {
 	const ast = parse(source, { modern: true })
@@ -31,4 +31,8 @@ describe("extractClasses", () => {
 	test("ClassDirective - class directive attributes", () => {
 		expect(getClasses(ClassDirectiveTest)).toEqual(["a", "b"])
 	})
+
+	// test("StyleAtRule - style at rule attributes", () => {
+	// 	expect(getClasses(StyleAtRuleTest)).toEqual(["a b c d e f g h i j k l m n o p q r s t u v w x y z"])
+	// })
 })

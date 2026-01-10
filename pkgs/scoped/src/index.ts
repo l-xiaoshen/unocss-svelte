@@ -31,13 +31,13 @@ export function UnoCSSSvelteScoped(unocssOptions: UnoCSSSvelteScopedOptions = {}
 
 	const plugin: Plugin = {
 		name: "vite-plugin-svelte-unocss-svelte-scoped",
-
 		transform: {
 			filter: {
 				id: /\.svelte$/,
 			},
 			async handler(code, id, options) {
 				await ready
+
 				const result = await transformSvelte(code, uno, unocssOptions)
 
 				if (!result) {

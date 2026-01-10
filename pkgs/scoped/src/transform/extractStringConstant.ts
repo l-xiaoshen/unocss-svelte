@@ -24,6 +24,7 @@ export function extractStringConstant(node: AST.ExpressionTag): FoundClasses[] {
 				start: node.start,
 				end: node.end,
 				classes: String(node.value),
+				type: "literal",
 			})
 		},
 		TemplateLiteral(node, { next }) {
@@ -34,6 +35,7 @@ export function extractStringConstant(node: AST.ExpressionTag): FoundClasses[] {
 						start: quasiNode.start,
 						end: quasiNode.end,
 						classes: quasiNode.value.raw,
+						type: "literal",
 					})
 				}
 			}
@@ -56,6 +58,7 @@ export function extractStringConstant(node: AST.ExpressionTag): FoundClasses[] {
 						start: keyNode.start,
 						end: keyNode.end,
 						classes: keyNode.name,
+						type: "clsx_object_key",
 					})
 				} else if (keyNode.type === "Literal") {
 					visit(keyNode as ASTType)
