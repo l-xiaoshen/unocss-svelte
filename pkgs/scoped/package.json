@@ -21,7 +21,8 @@
 		"rollup": "^4.55.1",
 		"svelte": "^5.46.1",
 		"vite": "^7.3.1",
-		"zimmerframe": "^1.1.4"
+		"zimmerframe": "^1.1.4",
+		"@unocss-svelte/tailwindcss": "workspace:*"
 	},
 	"exports": {
 		".": {

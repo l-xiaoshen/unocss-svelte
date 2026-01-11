@@ -21,6 +21,10 @@
         "@sveltejs/kit": "^2.49.1",
         "@sveltejs/vite-plugin-svelte": "^6.2.1",
         "@tailwindcss/vite": "^4.1.17",
+        "@unocss-svelte/scoped": "workspace:*",
+        "@unocss-svelte/tailwindcss": "workspace:*",
+        "@unocss/preset-wind4": "66.5.10",
+        "@unocss/reset": "66.5.10",
         "clsx": "^2.1.1",
         "svelte": "^5.45.6",
         "svelte-check": "^4.3.4",
@@ -29,6 +33,7 @@
         "tailwindcss": "^4.1.17",
         "tw-animate-css": "^1.4.0",
         "typescript": "^5.9.3",
+        "unocss": "66.5.10",
         "vite": "^7.2.6",
       },
     },
@@ -56,6 +61,7 @@
     "pkgs/scoped": {
       "name": "@unocss-svelte/scoped",
       "dependencies": {
+        "@unocss-svelte/tailwindcss": "workspace:*",
         "@unocss/config": "66.5.10",
         "@unocss/core": "66.5.10",
         "@unocss/transformer-directives": "66.5.10",
@@ -72,6 +78,25 @@
         "@types/bun": "latest",
         "@types/estree": "^1.0.8",
         "@unocss/preset-wind4": "66.5.10",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
+    "pkgs/tailwindcss": {
+      "name": "@unocss-svelte/tailwindcss",
+      "dependencies": {
+        "@unocss/config": "66.5.10",
+        "@unocss/core": "66.5.10",
+        "@unocss/preset-wind4": "66.5.10",
+        "css-tree": "^3.1.0",
+        "lightningcss": "^1.30.2",
+        "vite": "^7.3.1",
+        "zimmerframe": "^1.1.4",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "@types/css-tree": "^2.3.11",
       },
       "peerDependencies": {
         "typescript": "^5",
@@ -285,11 +310,15 @@
 
     "@types/cookie": ["@types/cookie@0.6.0", "", {}, "sha512-4Kh9a6B2bQciAhf7FSuMRRkUWecJgJu9nPnx3yzpsfXX/c50REIqpHY4C82bXP90qrLtXtkDxTZosYO3UpOwlA=="],
 
+    "@types/css-tree": ["@types/css-tree@2.3.11", "", {}, "sha512-aEokibJOI77uIlqoBOkVbaQGC9zII0A+JH1kcTNKW2CwyYWD8KM6qdo+4c77wD3wZOQfJuNWAr9M4hdk+YhDIg=="],
+
     "@types/estree": ["@types/estree@1.0.8", "", {}, "sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w=="],
 
     "@types/node": ["@types/node@25.0.5", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-FuLxeLuSVOqHPxSN1fkcD8DLU21gAP7nCKqGRJ/FglbCUBs0NYN6TpHcdmyLeh8C0KwGIaZQJSv+OYG+KZz+Gw=="],
 
     "@unocss-svelte/scoped": ["@unocss-svelte/scoped@workspace:pkgs/scoped"],
+
+    "@unocss-svelte/tailwindcss": ["@unocss-svelte/tailwindcss@workspace:pkgs/tailwindcss"],
 
     "@unocss/astro": ["@unocss/astro@66.5.10", "", { "dependencies": { "@unocss/core": "66.5.10", "@unocss/reset": "66.5.10", "@unocss/vite": "66.5.10" }, "peerDependencies": { "vite": "^2.9.0 || ^3.0.0-0 || ^4.0.0 || ^5.0.0-0 || ^6.0.0-0 || ^7.0.0-0" }, "optionalPeers": ["vite"] }, "sha512-R1UU8lfIqcuorGpiuU+9pQEmK8uBBk1sf5re1db9kr23924Ia/aBCmfs4W2xyVCwJ0cGBv9C3ywDgOsgkHFCbQ=="],
 

@@ -1,0 +1,31 @@
+{
+	"name": "@unocss-svelte/tailwindcss",
+	"module": "src/index.ts",
+	"type": "module",
+	"devDependencies": {
+		"@types/bun": "latest",
+		"@types/css-tree": "^2.3.11"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"dependencies": {
+		"@unocss/config": "66.5.10",
+		"@unocss/core": "66.5.10",
+		"@unocss/preset-wind4": "66.5.10",
+		"css-tree": "^3.1.0",
+		"lightningcss": "^1.30.2",
+		"vite": "^7.3.1",
+		"zimmerframe": "^1.1.4"
+	},
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"types": "./src/index.ts"
+		},
+		"./vite": {
+			"import": "./dist/vite/index.js",
+			"types": "./src/vite/index.ts"
+		}
+	}
+}

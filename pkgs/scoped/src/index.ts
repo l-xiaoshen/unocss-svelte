@@ -1,31 +1,35 @@
 import { createRecoveryConfigLoader } from "@unocss/config"
 import { createGenerator, UnoGenerator, type UnocssPluginContext } from "@unocss/core"
-import type { Plugin } from "vite"
+import type { Plugin, PluginOption } from "vite"
 import { transformSvelte } from "./transform/transform"
 import transformerDirectives from "@unocss/transformer-directives"
 import MagicString from "magic-string"
+import { UnoCSSTailwindSupport } from "@unocss-svelte/tailwindcss/vite"
 
 const unoPreflightVirtualModuleId = "virtual:uno-preflight.css"
 const resolvedUnoPreflightVirtualModuleId = "\0" + unoPreflightVirtualModuleId
 
-export type UnoCSSSvelteScopedOptions = {}
+export type UnoCSSSvelteScopedOptions = {
+	/** Path to the CSS file containing Tailwind theme variables (relative to project root) */
+	css?: string
+}
 
-export function UnoCSSSvelteScoped(unocssOptions: UnoCSSSvelteScopedOptions = {}): Plugin {
+export async function UnoCSSSvelteScoped(unocssOptions: UnoCSSSvelteScopedOptions = {}): Promise<PluginOption[]> {
 	const loadConfig = createRecoveryConfigLoader()
-	let uno: UnoGenerator
-	const _uno = createGenerator().then((r) => {
-		uno = r
-		if (uno.config.transformers?.length)
-			throw new Error(
-				'Due to the differences in normal UnoCSS global usage and Svelte Scoped usage, "config.transformers" will be ignored. You can still use transformers in CSS files with the "cssFileTransformers" option.',
-			)
-		return r
-	})
+
+	const uno = await createGenerator()
+
+	if (uno.config.transformers?.length) {
+		throw new Error(
+			'Due to the differences in normal UnoCSS global usage and Svelte Scoped usage, "config.transformers" will be ignored. You can still use transformers in CSS files with the "cssFileTransformers" option.',
+		)
+	}
+
+	const tailwindcssSupport = uno.config.presets?.some((p) => p.name === "tailwindcss")
 
 	const ready = reloadConfig()
 
 	async function reloadConfig() {
-		await _uno
 		const { config, sources } = await loadConfig(process.cwd(), "unocss.config.ts")
 		await uno.setConfig(config)
 		return { config, sources }
@@ -58,7 +62,6 @@ export function UnoCSSSvelteScoped(unocssOptions: UnoCSSSvelteScopedOptions = {}
 				const filename = new URL(lastPart, "file://").pathname
 
 				await ready
-				const uno = await _uno
 				unoCtx.uno = uno
 
 				await uno.setConfig(uno.userConfig, uno.defaults)
@@ -114,7 +117,6 @@ export function UnoCSSSvelteScoped(unocssOptions: UnoCSSSvelteScopedOptions = {}
 		},
 		async load(id) {
 			if (id === resolvedUnoPreflightVirtualModuleId) {
-				const uno = await _uno
 				const { css } = await uno.generate("", {
 					preflights: true,
 					safelist: true,
@@ -125,5 +127,19 @@ export function UnoCSSSvelteScoped(unocssOptions: UnoCSSSvelteScopedOptions = {}
 		},
 	}
 
-	return plugin
+	return [
+		plugin,
+		UnoCSSTailwindSupport(
+			(themePreset) => {
+				const unoDefaults = uno.defaults
+				if (unoDefaults.presets) {
+					unoDefaults.presets = [themePreset, ...unoDefaults.presets]
+				} else {
+					unoDefaults.presets = [themePreset]
+				}
+				uno.setConfig(uno.userConfig, unoDefaults)
+			},
+			{ css: unocssOptions.css },
+		),
+	]
 }
