@@ -1,22 +1,21 @@
 import { createRecoveryConfigLoader } from "@unocss/config"
-import { createGenerator, UnoGenerator, type UnocssPluginContext } from "@unocss/core"
+import { createGenerator, type UnocssPluginContext } from "@unocss/core"
 import type { Plugin, PluginOption } from "vite"
 import { transformSvelte } from "./transform/transform"
 import transformerDirectives from "@unocss/transformer-directives"
 import MagicString from "magic-string"
 import { UnoCSSTailwindSupport } from "@unocss-svelte/tailwindcss/vite"
 
-const unoPreflightVirtualModuleId = "virtual:uno-preflight.css"
-const resolvedUnoPreflightVirtualModuleId = "\0" + unoPreflightVirtualModuleId
+const PREFLIGHT_VIRTUAL_ID = "virtual:uno-preflight.css"
+const RESOLVED_PREFLIGHT_VIRTUAL_ID = "\0" + PREFLIGHT_VIRTUAL_ID
 
 export type UnoCSSSvelteScopedOptions = {
 	/** Path to the CSS file containing Tailwind theme variables (relative to project root) */
 	css?: string
 }
 
-export async function UnoCSSSvelteScoped(unocssOptions: UnoCSSSvelteScopedOptions = {}): Promise<PluginOption[]> {
+export async function UnoCSSSvelteScoped(options: UnoCSSSvelteScopedOptions = {}): Promise<PluginOption[]> {
 	const loadConfig = createRecoveryConfigLoader()
-
 	const uno = await createGenerator()
 
 	if (uno.config.transformers?.length) {
@@ -25,98 +24,33 @@ export async function UnoCSSSvelteScoped(unocssOptions: UnoCSSSvelteScopedOption
 		)
 	}
 
-	const tailwindcssSupport = uno.config.presets?.some((p) => p.name === "tailwindcss")
-
-	const ready = reloadConfig()
-
-	async function reloadConfig() {
-		const { config, sources } = await loadConfig(process.cwd(), "unocss.config.ts")
+	const configReady = loadConfig(process.cwd(), "unocss.config.ts").then(async ({ config, sources }) => {
 		await uno.setConfig(config)
 		return { config, sources }
-	}
+	})
 
-	const unoCtx = {
-		ready: ready,
-		uno: uno!,
+	const ctx: UnocssPluginContext = {
+		ready: configReady,
+		uno,
 	} as UnocssPluginContext
 
 	let isSvelteKit = false
 
 	const plugin: Plugin = {
-		name: "vite-plugin-svelte-unocss-svelte-scoped",
+		name: "unocss-svelte-scoped",
+
 		configResolved(config) {
 			isSvelteKit = config.plugins.some((p) => p.name?.includes("vite-plugin-sveltekit"))
 		},
-		transform: {
-			filter: {
-				id: {
-					include: [/\.svelte$/, /\.css$/],
-				},
-			},
-			async handler(code, id, options) {
-				const lastPart = id.split("/").pop()
-				if (!lastPart) {
-					return
-				}
-
-				const filename = new URL(lastPart, "file://").pathname
-
-				await ready
-				unoCtx.uno = uno
-
-				await uno.setConfig(uno.userConfig, uno.defaults)
-
-				if (id.endsWith(".svelte")) {
-					const result = await transformSvelte(code, uno, unoCtx, unocssOptions)
-
-					if (!result) {
-						return
-					}
-
-					return {
-						code: result.toString(),
-						map: result.generateMap(),
-					}
-				}
-
-				if (!isSvelteKit) {
-					return
-				}
-
-				if (filename.endsWith(".css")) {
-					const transformer = transformerDirectives()
-
-					const string = new MagicString(code)
-
-					await transformer.transform(string, id, unoCtx)
-
-					if (!string.hasChanged()) {
-						return
-					}
-
-					const { css: preflightCSS } = await uno.generate("", {
-						preflights: true,
-						safelist: true,
-						extendedInfo: false,
-					})
-					if (preflightCSS && preflightCSS.trim() !== "") {
-						string.append(preflightCSS)
-					}
-
-					return {
-						code: string.toString(),
-						map: string.generateMap(),
-					}
-				}
-			},
-			order: "pre",
-		},
 
 		resolveId(id) {
-			if (id === unoPreflightVirtualModuleId) return resolvedUnoPreflightVirtualModuleId
+			if (id === PREFLIGHT_VIRTUAL_ID) {
+				return RESOLVED_PREFLIGHT_VIRTUAL_ID
+			}
 		},
+
 		async load(id) {
-			if (id === resolvedUnoPreflightVirtualModuleId) {
+			if (id === RESOLVED_PREFLIGHT_VIRTUAL_ID) {
 				const { css } = await uno.generate("", {
 					preflights: true,
 					safelist: true,
@@ -125,21 +59,79 @@ export async function UnoCSSSvelteScoped(unocssOptions: UnoCSSSvelteScopedOption
 				return css
 			}
 		},
+
+		transform: {
+			order: "pre",
+			filter: {
+				id: {
+					include: [/\.svelte$/, /\.css$/],
+				},
+			},
+			async handler(code, id) {
+				await configReady
+
+				if (id.endsWith(".svelte")) {
+					return transformSvelteFile(code, id)
+				}
+
+				if (isSvelteKit && id.endsWith(".css")) {
+					return transformCSSFile(code, id)
+				}
+			},
+		},
 	}
 
-	return [
-		plugin,
-		UnoCSSTailwindSupport(
-			(themePreset) => {
-				const unoDefaults = uno.defaults
-				if (unoDefaults.presets) {
-					unoDefaults.presets = [themePreset, ...unoDefaults.presets]
-				} else {
-					unoDefaults.presets = [themePreset]
-				}
-				uno.setConfig(uno.userConfig, unoDefaults)
-			},
-			{ css: unocssOptions.css },
-		),
-	]
+	async function transformSvelteFile(code: string, id: string) {
+		const result = await transformSvelte(code, uno, ctx, options)
+		if (!result) {
+			return
+		}
+		return {
+			code: result.toString(),
+			map: result.generateMap(),
+		}
+	}
+
+	async function transformCSSFile(code: string, id: string) {
+		const transformer = transformerDirectives()
+		const s = new MagicString(code)
+
+		await transformer.transform(s, id, ctx)
+
+		if (!s.hasChanged()) {
+			return
+		}
+
+		const { css: preflightCSS } = await uno.generate("", {
+			preflights: true,
+			safelist: true,
+			extendedInfo: false,
+		})
+
+		if (preflightCSS?.trim()) {
+			s.append(preflightCSS)
+		}
+
+		return {
+			code: s.toString(),
+			map: s.generateMap(),
+		}
+	}
+
+	const plugins: PluginOption[] = [plugin]
+
+	const tailwindcssSupportNeeded = uno.config.presets?.some((p) => p.name === "tailwindcss")
+	if (tailwindcssSupportNeeded) {
+		plugins.push(
+			UnoCSSTailwindSupport(
+				(themePreset) => {
+					const defaults = uno.defaults
+					defaults.presets = [themePreset, ...(defaults.presets ?? [])]
+					uno.setConfig(uno.userConfig, defaults)
+				},
+				{ css: options.css },
+			),
+		)
+	}
+	return plugins
 }

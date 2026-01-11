@@ -74,7 +74,22 @@ export function extractStringConstant(node: AST.ExpressionTag): FoundClasses[] {
 		if (path.length === 0) {
 			return true
 		}
-		return path.every((node) => visitorKeys.includes(node.type))
+
+		for (const node of path) {
+			if (visitorKeys.includes(node.type)) {
+				continue
+			}
+
+			if (node.type === "CallExpression") {
+				if (node.callee.type === "Identifier" && node.callee.name === "cn") {
+					return true
+				}
+			}
+
+			return false
+		}
+
+		return true
 	}
 
 	walk(node.expression as ASTType, {} as WalkState, visitor)

@@ -1,24 +1,11 @@
 import type { UnoGenerator, UnocssPluginContext } from "@unocss/core"
 import MagicString from "magic-string"
-import { parse, type AST, type PreprocessorGroup } from "svelte/compiler"
+import { parse } from "svelte/compiler"
 import { extractClasses } from "./extractClasses"
-import { transform, type Selector, type SelectorComponent } from "lightningcss"
+import { transformMarkupClasses, transformStyleDirectives } from "./css"
 import type { UnoCSSSvelteScopedOptions } from ".."
-import type { FoundClasses } from "./types"
-import transformerDirectives from "@unocss/transformer-directives"
 
-// from @unocss/transformer-compile-class
-export function hash(str: string) {
-	let i
-	let l
-	let hval = 0x811c9dc5
-
-	for (i = 0, l = str.length; i < l; i++) {
-		hval ^= str.charCodeAt(i)
-		hval += (hval << 1) + (hval << 4) + (hval << 7) + (hval << 8) + (hval << 24)
-	}
-	return `00000${(hval >>> 0).toString(36)}`.slice(-6)
-}
+export { hash } from "./hash"
 
 export async function transformSvelte(
 	code: string,
@@ -27,135 +14,64 @@ export async function transformSvelte(
 	options: UnoCSSSvelteScopedOptions,
 ) {
 	const ast = parse(code, { modern: true })
-
 	const classes = extractClasses(ast)
 
 	if (classes.length === 0) {
 		return null
 	}
 
-	const appendCSS = await transformSvelteMarkup(uno, classes)
+	const generatedCSS = await transformMarkupClasses(uno, classes)
+	const preflightCSS = await generatePreflights(uno)
 
 	const string = new MagicString(code)
-	if (ast.css) {
-		const cssTransform = await transformSvelteAtRule(ast.css, unoCtx)
-		if (cssTransform) {
-			string.update(ast.css.content.start, ast.css.content.end, cssTransform)
-		}
-	}
-
-	const { css: preflightCSS } = await uno.generate("", {
-		preflights: true,
-		minify: false,
-		safelist: true,
-	})
 
 	if (ast.css) {
-		if (preflightCSS && preflightCSS.trim() !== "") {
-			string.appendLeft(ast.css.content.start, `\n/*preflight*/\n:global\n{\n${preflightCSS}\n}\n`)
+		const transformedStyles = await transformStyleDirectives(ast.css, unoCtx)
+		if (transformedStyles) {
+			string.update(ast.css.content.start, ast.css.content.end, transformedStyles)
 		}
-
-		if (appendCSS) {
-			string.appendRight(ast.css.content.end, "\n" + appendCSS.toString())
-		}
+		injectCSS(string, ast.css.content, preflightCSS, generatedCSS)
 	} else {
-		let newCSS = ""
-		if (preflightCSS && preflightCSS.trim() !== "") {
-			newCSS += `/*preflight*/\n:global\n{\n${preflightCSS}\n}\n`
-		}
-
-		if (appendCSS) {
-			newCSS += appendCSS.toString()
-		}
-
-		string.append(`\n\n<style>\n${newCSS}\n</style>`)
+		appendStyleBlock(string, preflightCSS, generatedCSS)
 	}
 
 	return string
 }
 
-async function transformSvelteMarkup(uno: UnoGenerator, classes: FoundClasses[]) {
-	const allClasses = classes
-		.filter((c) => c.type !== "style_at_rule")
-		.map((c) => c.classes)
-		.join(" ")
-	const result = await uno.generate(allClasses, {
-		preflights: false,
-		minify: true,
-		safelist: false,
+async function generatePreflights(uno: UnoGenerator) {
+	const { css } = await uno.generate("", {
+		preflights: true,
+		minify: false,
+		safelist: true,
 	})
-
-	result.layers = result.layers.filter((l) => result.getLayer(l)?.trim() !== "")
-
-	if (result.layers.length === 0) {
-		return null
-	}
-
-	const cssString = result.css
-
-	const { code: cssCode } = transform({
-		filename: "style.css",
-		code: Buffer.from(cssString),
-		visitor: {
-			Selector(selector) {
-				if (!needTransformSelector(selector, result.matched)) {
-					return
-				}
-				return selector.map<SelectorComponent>((s) => {
-					if (isClassSelector(s) && result.matched.has(s.name)) {
-						return {
-							type: "pseudo-class",
-							kind: "custom-function",
-							name: "global",
-							arguments: [
-								{
-									type: "token",
-									value: {
-										type: "delim",
-										value: ".",
-									},
-								},
-								{
-									type: "token",
-									value: {
-										type: "ident",
-										value: s.name,
-									},
-								},
-							],
-						}
-					}
-					return s
-				})
-			},
-		},
-	})
-
-	return cssCode
+	return css?.trim() ? css : null
 }
 
-async function transformSvelteAtRule(ast: AST.CSS.StyleSheet, unoCtx: UnocssPluginContext) {
-	const transformer = transformerDirectives()
-
-	const string = new MagicString(ast.content.styles)
-
-	await transformer.transform(string, "virtual.css", unoCtx)
-
-	if (!string.hasChanged()) {
-		return
+function injectCSS(
+	string: MagicString,
+	content: { start: number; end: number },
+	preflightCSS: string | null,
+	generatedCSS: Uint8Array | null,
+) {
+	if (preflightCSS) {
+		string.appendLeft(content.start, `\n/*preflight*/\n:global\n{\n${preflightCSS}\n}\n`)
 	}
-
-	return string.toString()
+	if (generatedCSS) {
+		string.appendRight(content.end, "\n" + generatedCSS.toString())
+	}
 }
 
-function isClassSelector(selector: SelectorComponent): selector is SelectorComponent & { type: "class" } {
-	return selector.type === "class"
-}
+function appendStyleBlock(string: MagicString, preflightCSS: string | null, generatedCSS: Uint8Array | null) {
+	let newCSS = ""
 
-function needTransformSelector(selector: Selector, matchedClasses: Set<string>) {
-	if (selector.some((s) => s.type === "class" && matchedClasses.has(s.name))) {
-		return true
+	if (preflightCSS) {
+		newCSS += `/*preflight*/\n:global\n{\n${preflightCSS}\n}\n`
+	}
+	if (generatedCSS) {
+		newCSS += generatedCSS.toString()
 	}
 
-	return false
+	if (newCSS) {
+		string.append(`\n\n<style>\n${newCSS}\n</style>`)
+	}
 }

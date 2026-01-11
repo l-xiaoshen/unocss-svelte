@@ -9,6 +9,8 @@ import AttributeClassTest from "./test/AttributeClass.test.svelte?raw"
 import ClassDirectiveTest from "./test/ClassDirective.test.svelte?raw"
 import ClsxClassTest from "./test/ClsxClass.test.svelte?raw"
 import StaticClassTest from "./test/StaticClass.test.svelte?raw"
+import StyleAtRuleTest from "./test/StyleAtRule.test.svelte?raw"
+import CNCompatTest from "./test/CNCompat.test.svelte?raw"
 
 function getClasses(source: string): string[] {
 	const ast = parse(source, { modern: true })
@@ -32,7 +34,11 @@ describe("extractClasses", () => {
 		expect(getClasses(ClassDirectiveTest)).toEqual(["a", "b"])
 	})
 
-	// test("StyleAtRule - style at rule attributes", () => {
-	// 	expect(getClasses(StyleAtRuleTest)).toEqual(["a b c d e f g h i j k l m n o p q r s t u v w x y z"])
-	// })
+	test("StyleAtRule - style at rule attributes", () => {
+		expect(getClasses(StyleAtRuleTest)).toEqual(["a b c d e f g h i j k l m n o p q r s t u v w x y z"])
+	})
+
+	test("CNCompat", () => {
+		expect(getClasses(CNCompatTest)).toEqual(["a b c"])
+	})
 })
