@@ -8,6 +8,10 @@ import Test2 from "./Test2.svelte"
     <Test2 />
 </div>
 
+<button class="bg-red-500 disabled:bg-blue-500" disabled>
+    Click me
+</button>
+
 
 <style>
     div {

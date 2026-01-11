@@ -1,7 +1,8 @@
 import { UnoCSSSvelteScoped } from "@unocss-svelte/scoped"
 import { sveltekit } from "@sveltejs/kit/vite"
 import { defineConfig } from "vite"
+import Inspect from "vite-plugin-inspect"
 
 export default defineConfig({
-	plugins: [UnoCSSSvelteScoped({ css: "src/routes/layout.css" }), sveltekit()],
+	plugins: [UnoCSSSvelteScoped({ css: "src/routes/layout.css" }), sveltekit(), Inspect()],
 })

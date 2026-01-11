@@ -1,8 +1,8 @@
 import type { AST } from "svelte/compiler"
 import { walk, type Visitors } from "zimmerframe"
-import type { ASTType, FoundClasses, WalkState } from "./types"
+import type { ASTType, ExtractOptions, FoundClasses, WalkState } from "./types"
 
-export function extractStringConstant(node: AST.ExpressionTag): FoundClasses[] {
+export function extractStringConstant(node: AST.ExpressionTag, options: ExtractOptions = {}): FoundClasses[] {
 	const foundClasses: FoundClasses[] = []
 
 	const visitor: Visitors<ASTType, WalkState> = {
@@ -80,7 +80,7 @@ export function extractStringConstant(node: AST.ExpressionTag): FoundClasses[] {
 				continue
 			}
 
-			if (node.type === "CallExpression") {
+			if (options.shadcn && node.type === "CallExpression") {
 				if (node.callee.type === "Identifier" && node.callee.name === "cn") {
 					continue
 				}

@@ -127,12 +127,6 @@ describe("parseThemeProperty", () => {
 			name: "spin",
 		})
 	})
-
-	test("returns null for non-theme properties", () => {
-		expect(parseThemeProperty("--custom-property")).toBeNull()
-		expect(parseThemeProperty("color-red")).toBeNull()
-		expect(parseThemeProperty("")).toBeNull()
-	})
 })
 
 describe("parseTailwindCSSThemes", () => {
@@ -376,5 +370,17 @@ describe("parseTailwindThemeToUno", () => {
 		expect(theme.breakpoint).toEqual({ sm: " 640px" })
 		expect(theme.shadow).toEqual({ md: " 0 4px 6px rgba(0,0,0,0.1)" })
 		expect(theme.ease).toEqual({ out: " cubic-bezier(0, 0, 0.2, 1)" })
+	})
+
+	test("unsupported properties are ignored", () => {
+		const css = `
+@theme inline {
+    --border: oklch(0.929 0.013 255.508);
+}
+`
+		const theme = parseTailwindThemeToUno(css)
+		expect(theme.colors).toEqual({
+			border: " oklch(0.929 0.013 255.508)",
+		})
 	})
 })

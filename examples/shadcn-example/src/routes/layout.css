@@ -1,8 +1,9 @@
+@import '@unocss/reset/tailwind-v4.css' layer(base);
+
 @import "tailwindcss";
 
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
 
 :root {
   --radius: 0.625rem;
@@ -111,10 +112,12 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }

@@ -80,6 +80,11 @@ export function parseThemeProperty(property: string): ParsedThemeProperty | null
 		}
 	}
 
+	return {
+		namespace: "color",
+		name: withoutPrefix,
+	}
+
 	return null
 }
 

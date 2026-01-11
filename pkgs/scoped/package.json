@@ -12,6 +12,7 @@
 	},
 	"dependencies": {
 		"@unocss-svelte/tailwindcss": "workspace:*",
+		"@unocss-svelte/shadcn": "workspace:*",
 		"@unocss/config": "66.5.10",
 		"@unocss/core": "66.5.10",
 		"@unocss/transformer-directives": "66.5.10",

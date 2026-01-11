@@ -2,6 +2,11 @@ import type { Expression, Node as ESTreeNode } from "estree"
 import type { Node } from "acorn"
 import type { AST } from "svelte/compiler"
 
+export type ExtractOptions = {
+	shadcn?: boolean
+	tailwindVariant?: boolean
+}
+
 export type FoundClassesType = "literal" | "clsx_object_key" | "class_directive" | "style_at_rule"
 
 export type FoundClassInfo = {

@@ -10,10 +10,16 @@ export {
 	type ParsedThemeProperty,
 } from "./theme"
 
+export { loadTailwindThemePreset } from "./vite"
+
 const tailwindcssPreset = definePreset<Theme>(async () => {
 	return {
 		name: "tailwindcss",
-		presets: [presetWind4()],
+		presets: [
+			presetWind4({
+				dark: "class",
+			}),
+		],
 	} satisfies Preset<Theme>
 })
 

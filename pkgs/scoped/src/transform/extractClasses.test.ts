@@ -14,7 +14,10 @@ import CNCompatTest from "./test/CNCompat.test.svelte?raw"
 
 function getClasses(source: string): string[] {
 	const ast = parse(source, { modern: true })
-	return extractClasses(ast).map((f) => f.classes)
+	return extractClasses(ast, {
+		tailwindVariant: true,
+		shadcn: true,
+	}).map((f) => f.classes)
 }
 
 describe("extractClasses", () => {

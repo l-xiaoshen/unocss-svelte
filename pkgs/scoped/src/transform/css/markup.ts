@@ -13,7 +13,7 @@ export async function transformMarkupClasses(uno: UnoGenerator, classes: FoundCl
 
 	const result = await uno.generate(allClasses, {
 		preflights: false,
-		minify: true,
+		minify: false,
 		safelist: false,
 	})
 
@@ -25,20 +25,7 @@ export async function transformMarkupClasses(uno: UnoGenerator, classes: FoundCl
 
 	const cssString = result.css
 
-	const { code: cssCode } = transform({
-		filename: "style.css",
-		code: Buffer.from(cssString),
-		visitor: {
-			Selector(selector) {
-				if (!needsGlobalWrapper(selector, result.matched)) {
-					return
-				}
-				return wrapSelectorsWithGlobal(selector, result.matched)
-			},
-		},
-	})
-
-	return cssCode
+	return `\n:global {\n${cssString}\n}\n`
 }
 
 function wrapSelectorsWithGlobal(selector: Selector, matchedClasses: Set<string>): Selector {

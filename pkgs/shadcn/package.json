@@ -1,0 +1,22 @@
+{
+	"name": "@unocss-svelte/shadcn",
+	"type": "module",
+	"private": true,
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"dependencies": {
+		"@unocss/config": "66.5.10",
+		"@unocss/core": "66.5.10",
+		"@unocss/preset-wind4": "66.5.10"
+	},
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"types": "./src/index.ts"
+		}
+	}
+}

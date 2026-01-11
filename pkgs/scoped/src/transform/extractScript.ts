@@ -1,6 +1,5 @@
 import type { AST } from "svelte/compiler"
 import { walk } from "zimmerframe"
-import { isEqual } from "es-toolkit"
 import type { FoundClasses } from "./types"
 
 type Path = (string | { type: "array" } | { type: "wildcard" })[]
@@ -81,20 +80,28 @@ export function extractTVClassesLiteral(node: AST.Script) {
 				...state,
 			})
 		},
-		Property(node, { next, state, stop }) {
+		Property(node, { next, state, stop, visit }) {
 			if (!state.path) {
 				return stop()
 			}
 
 			const key = node.key
 
-			if (key.type !== "Identifier") {
-				return stop()
+			if (key.type === "Identifier") {
+				visit(node.value as NodeType, {
+					path: [...state.path, key.name],
+				})
+				return
 			}
 
-			next({
-				path: [...state.path, key.name],
-			})
+			if (key.type === "Literal" && typeof key.value === "string") {
+				visit(node.value as NodeType, {
+					path: [...state.path, key.value],
+				})
+				return
+			}
+
+			return stop()
 		},
 		ArrayExpression(node, { next, state, stop }) {
 			if (!state.path) {

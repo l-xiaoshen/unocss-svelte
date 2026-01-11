@@ -15,6 +15,9 @@
     "examples/shadcn-example": {
       "name": "shadcn-example",
       "version": "0.0.1",
+      "dependencies": {
+        "@unocss/reset": "66.5.10",
+      },
       "devDependencies": {
         "@dnd-kit-svelte/svelte": "^0.1.5",
         "@dnd-kit/abstract": "^0.1.21",
@@ -30,9 +33,9 @@
         "@types/d3-scale": "^4.0.9",
         "@types/d3-shape": "^3.1.7",
         "@unocss-svelte/scoped": "workspace:*",
+        "@unocss-svelte/shadcn": "workspace:*",
         "@unocss-svelte/tailwindcss": "workspace:*",
         "@unocss/preset-wind4": "66.5.10",
-        "@unocss/reset": "66.5.10",
         "bits-ui": "^2.14.4",
         "clsx": "^2.1.1",
         "d3-scale": "^4.0.2",
@@ -49,6 +52,7 @@
         "unocss": "66.5.10",
         "vaul-svelte": "^1.0.0-next.7",
         "vite": "^7.2.6",
+        "vite-plugin-inspect": "^11.3.3",
         "zod": "^4.1.13",
       },
     },
@@ -76,6 +80,7 @@
     "pkgs/scoped": {
       "name": "@unocss-svelte/scoped",
       "dependencies": {
+        "@unocss-svelte/shadcn": "workspace:*",
         "@unocss-svelte/tailwindcss": "workspace:*",
         "@unocss/config": "66.5.10",
         "@unocss/core": "66.5.10",
@@ -94,6 +99,20 @@
         "@types/bun": "latest",
         "@types/estree": "^1.0.8",
         "@unocss/preset-wind4": "66.5.10",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
+    "pkgs/shadcn": {
+      "name": "@unocss-svelte/shadcn",
+      "dependencies": {
+        "@unocss/config": "66.5.10",
+        "@unocss/core": "66.5.10",
+        "@unocss/preset-wind4": "66.5.10",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
       },
       "peerDependencies": {
         "typescript": "^5",
@@ -385,6 +404,8 @@
     "@types/node": ["@types/node@25.0.5", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-FuLxeLuSVOqHPxSN1fkcD8DLU21gAP7nCKqGRJ/FglbCUBs0NYN6TpHcdmyLeh8C0KwGIaZQJSv+OYG+KZz+Gw=="],
 
     "@unocss-svelte/scoped": ["@unocss-svelte/scoped@workspace:pkgs/scoped"],
+
+    "@unocss-svelte/shadcn": ["@unocss-svelte/shadcn@workspace:pkgs/shadcn"],
 
     "@unocss-svelte/tailwindcss": ["@unocss-svelte/tailwindcss@workspace:pkgs/tailwindcss"],
 
