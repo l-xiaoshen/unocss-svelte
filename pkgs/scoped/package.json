@@ -11,18 +11,19 @@
 		"typescript": "^5"
 	},
 	"dependencies": {
+		"@unocss-svelte/tailwindcss": "workspace:*",
 		"@unocss/config": "66.5.10",
 		"@unocss/core": "66.5.10",
 		"@unocss/transformer-directives": "66.5.10",
 		"acorn": "^8.15.0",
+		"es-toolkit": "^1.43.0",
 		"lightningcss": "^1.30.2",
 		"lightningcss-wasm": "^1.30.2",
 		"magic-string": "^0.30.21",
 		"rollup": "^4.55.1",
 		"svelte": "^5.46.1",
 		"vite": "^7.3.1",
-		"zimmerframe": "^1.1.4",
-		"@unocss-svelte/tailwindcss": "workspace:*"
+		"zimmerframe": "^1.1.4"
 	},
 	"exports": {
 		".": {

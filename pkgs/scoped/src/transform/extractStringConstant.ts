@@ -82,7 +82,7 @@ export function extractStringConstant(node: AST.ExpressionTag): FoundClasses[] {
 
 			if (node.type === "CallExpression") {
 				if (node.callee.type === "Identifier" && node.callee.name === "cn") {
-					return true
+					continue
 				}
 			}
 
