@@ -42,6 +42,6 @@ describe("extractClasses", () => {
 	})
 
 	test("CNCompat", () => {
-		expect(getClasses(CNCompatTest)).toEqual(["a b c"])
+		expect(getClasses(CNCompatTest)).toEqual(["a b c", "d e f", "g h i", "j k l", "m n o"])
 	})
 })

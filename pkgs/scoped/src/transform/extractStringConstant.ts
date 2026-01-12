@@ -9,14 +9,12 @@ export function extractStringConstant(node: AST.ExpressionTag, options: ExtractO
 		_(node, { next, stop, path }) {
 			if (isPathAllKnown(path)) {
 				next()
-			} else {
-				stop()
 			}
 		},
 		ConditionalExpression(node, { next }) {
 			next()
 		},
-		LogicalExpression(node, { next }) {
+		LogicalExpression(node, { next, visit }) {
 			next()
 		},
 		Literal(node) {

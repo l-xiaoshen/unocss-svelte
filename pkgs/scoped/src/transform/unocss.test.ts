@@ -29,6 +29,4 @@ test("unocss", async () => {
 		minify: false,
 		extendedInfo: true,
 	})
-
-	console.log(result.css)
 })

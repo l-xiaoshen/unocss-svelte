@@ -26,8 +26,6 @@ export async function loadTailwindThemePreset(cssPath: string): Promise<Preset<T
 			name: "tailwindcss-themes",
 			theme,
 		})
-
-		console.log("[unocss-tailwindcss] Loaded theme from:", cssPath)
 		return preset
 	} catch (error) {
 		if ((error as NodeJS.ErrnoException).code === "ENOENT") {

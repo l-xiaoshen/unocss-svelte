@@ -148,7 +148,7 @@ let { ...restProps }: ComponentProps<typeof Sidebar.Root> = $props()
 				<Sidebar.MenuButton class="data-[slot=sidebar-menu-button]:!p-1.5">
 					{#snippet child({ props })}
 						<a href="##" {...props}>
-							<InnerShadowTopIcon class="!size-5" />
+							<InnerShadowTopIcon class="size-5!" />
 							<span class="text-base font-semibold">Acme Inc.</span>
 						</a>
 					{/snippet}

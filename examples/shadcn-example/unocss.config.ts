@@ -5,4 +5,5 @@ import { shadcn } from "@unocss-svelte/shadcn"
 
 export default defineConfig<Theme>({
 	presets: [shadcn({ official: true }), tailwindcss()],
+	outputToCssLayers: true,
 })

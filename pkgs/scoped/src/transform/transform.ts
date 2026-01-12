@@ -8,15 +8,32 @@ import type { ExtractOptions } from "./types"
 
 export { hash } from "./hash"
 
+export type TransformSvelteResult = {
+	code: MagicString
+	/** All class strings extracted from this file */
+	extractedClasses: Set<string>
+}
+
 export async function transformSvelte(
 	code: string,
 	uno: UnoGenerator,
 	unoCtx: UnocssPluginContext,
 	options: UnoCSSSvelteScopedOptions,
 	extractOptions: ExtractOptions = {},
-) {
+): Promise<TransformSvelteResult | null> {
 	const ast = parse(code, { modern: true })
 	const classes = extractClasses(ast, extractOptions)
+
+	// Collect all unique class strings for the registry
+	const extractedClasses = new Set<string>()
+	for (const c of classes) {
+		// Split class strings and add individual classes
+		for (const cls of c.classes.split(/\s+/)) {
+			if (cls.trim()) {
+				extractedClasses.add(cls.trim())
+			}
+		}
+	}
 
 	if (classes.length === 0) {
 		return null
@@ -31,26 +48,20 @@ export async function transformSvelte(
 		if (transformedStyles) {
 			string.update(ast.css.content.start, ast.css.content.end, transformedStyles)
 		}
-		const preflightCSS = await generatePreflights(uno)
-		injectCSS(string, ast.css.content, preflightCSS, generatedCSS)
+		// No longer inject preflight CSS per-component - it goes to global /preflight.css
+		injectCSS(string, ast.css.content, null, generatedCSS)
 	} else {
-		const preflightCSS = await generatePreflights(uno)
-		appendStyleBlock(string, preflightCSS, generatedCSS)
+		// No longer inject preflight CSS per-component - it goes to global /preflight.css
+		appendStyleBlock(string, null, generatedCSS)
 	}
 
 	//this is for dev
 	string.append(`\n\n${classes.map((c) => `<!-- ${c.classes} -->`).join("\n")}`)
 
-	return string
-}
-
-async function generatePreflights(uno: UnoGenerator) {
-	const { css } = await uno.generate("", {
-		preflights: false,
-		minify: false,
-		safelist: false,
-	})
-	return css?.trim() ? css : null
+	return {
+		code: string,
+		extractedClasses,
+	}
 }
 
 function injectCSS(
